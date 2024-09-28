@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>index</title>
+    <link href="./my.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container" style="text-align: center;">
+        <div>
+            학생관리
+        </div>
+        <div style="text-align:right; padding:5px 0px;">
+            <a href="./add.html" class="btn btn-primary">추가</a>
+        </div>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">No.</th>
+                    <th scope="col">학생명</th>
+                    <th scope="col">학부</th>
+                    <th scope="col">학번</th>
+                    <th scope="col">학년</th>
+                    <th scope="col">재학상태</th>
+                </tr>
+            </thead>
+            <tbody id="student-list">
+
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        window.onload = function() {
+            const studentList = document.getElementById("student-list");
+            let students = JSON.parse(localStorage.getItem("students")) || [];
+
+            if (students.length === 0) {
+                students = [
+                    { name: "김철수", phone: "010-1111-1111", dep: "전산전자공학부", stdid: "22100001", grade: "2", enrol: "재학" },
+                    { name: "이영희", phone: "010-2222-2222", dep: "국제어문학부", stdid: "22100002", grade: "2", enrol: "재학" },
+                    { name: "박민수", phone: "010-3333-3333", dep: "경영경제학부", stdid: "22100003", grade: "4", enrol: "재학" },
+                    { name: "장희수", phone: "010-4444-4444", dep: "법학부", stdid: "22100004", grade: "4", enrol: "졸업" },
+                    { name: "최지연", phone: "010-5555-5555", dep: "커뮤니케이션학부", stdid: "21600008", grade: "7", enrol: "제적" },
+                    { name: "윤지현", phone: "010-6666-6666", dep: "공간환경시스템공학부", stdid: "22200006", grade: "2", enrol: "휴학" },
+                    { name: "정호진", phone: "010-7777-7777", dep: "기계제어공학부", stdid: "21800007", grade: "5", enrol: "재학" },
+                    { name: "서지호", phone: "010-8888-8888", dep: "콘텐츠융합디자인학부", stdid: "21900008", grade: "5", enrol: "휴학" },
+                    { name: "홍길동", phone: "010-9999-9999", dep: "생명과학", stdid: "22100009", grade: "2", enrol: "재학" },
+                    { name: "한동이", phone: "010-0000-0000", dep: "글로벌리더십학부", stdid: "22400000", grade: "1", enrol: "재학" }
+                ];
+            }
+
+            localStorage.setItem("students", JSON.stringify(students));
+        
+            studentList.innerHTML = "";
+        
+            students.forEach((student, index) => {
+                const row = `
+                    <tr>
+                        <th scope="row">${index + 1}</th>
+                        <td class="td_name" onclick="location.href='./view.html?index=${index}'">${student.name}</td>
+                        <td>${student.dep}</td>
+                        <td>${student.stdid}</td>
+                        <td>${student.grade}</td>
+                        <td>${student.enrol}</td>
+                    </tr>
+                `;
+                studentList.innerHTML += row;
+            });
+        };
+        </script>
+
+</body>
+</html>
