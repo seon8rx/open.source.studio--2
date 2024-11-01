@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생관리</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container" style="text-align: center;">
+        <h1>학생 목록</h1>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">No.</th>
+                    <th scope="col">학생명</th>
+                    <th scope="col">학부</th>
+                    <th scope="col">학번</th>
+                    <th scope="col">전화번호</th>
+                    <th scope="col">수정 / 삭제</th>
+                </tr>
+            </thead>
+            <tbody id="student-list"></tbody>
+        </table>
+    </div>
+
+    <div class="container">
+        <h2>학생 관리 (추가 / 수정)</h2>
+        <form id="addStudentForm">
+            <div class="mb-3">
+                <label for="create_stud_name">학생명</label>
+                <input type="text" class="form-control" id="create_stud_name" required>
+            </div>
+            <div class="mb-3">
+                <label for="create_stud_phone">전화번호</label>
+                <input type="text" class="form-control" id="create_stud_phone" required>
+            </div>
+            <div class="mb-3">
+                <label for="create_stud_dep">학부</label>
+                <input type="text" class="form-control" id="create_stud_dep" required>
+            </div>
+            <div class="mb-3">
+                <label for="create_stud_stdid">학번</label>
+                <input type="text" class="form-control" id="create_stud_stdid" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="submitButton">추가</button>
+        </form>
+    </div>
+
+    <script>
+        let editMode = false;
+        let editId = null;
+
+        async function loadStudentList() {
+            const studentList = document.getElementById("student-list");
+            try {
+                const response = await fetch("http://localhost:3000/data");
+                const students = await response.json();
+
+                studentList.innerHTML = "";
+                students.forEach((student, index) => {
+                    const row = `
+                        <tr>
+                            <th scope="row">${index + 1}</th>
+                            <td>${student.name}</td>
+                            <td>${student.dep}</td>
+                            <td>${student.stdid}</td>
+                            <td>${student.phone}</td>
+                            <td>
+                                <button onclick="loadStudentForEdit('${student.id}')" class="btn btn-primary btn-sm">수정</button>
+                                <button onclick="deleteStudent('${student.id}')" class="btn btn-danger btn-sm">삭제</button>
+                            </td>
+                        </tr>
+                    `;
+                    studentList.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+            }
+        }
+
+        async function loadStudentForEdit(id) {
+            try {
+                const response = await fetch(`http://localhost:3000/data/${id}`);
+                const student = await response.json();
+
+                document.getElementById("create_stud_name").value = student.name;
+                document.getElementById("create_stud_phone").value = student.phone;
+                document.getElementById("create_stud_dep").value = student.dep;
+                document.getElementById("create_stud_stdid").value = student.stdid;
+
+                editMode = true;
+                editId = id;
+                document.getElementById("submitButton").innerText = "수정 완료";
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+            }
+        }
+
+        async function saveStudentData(event) {
+            event.preventDefault();
+
+            const studentData = {
+                stdid: document.getElementById("create_stud_stdid").value,
+                name: document.getElementById("create_stud_name").value,
+                phone: document.getElementById("create_stud_phone").value,
+                dep: document.getElementById("create_stud_dep").value
+            };
+
+            try {
+                let response;
+                if (editMode) {
+                    response = await fetch(`http://localhost:3000/data/${editId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(studentData)
+                    });
+                } else {
+                    const getResponse = await fetch("http://localhost:3000/data");
+                    const students = await getResponse.json();
+                    const maxId = students.length > 0 ? Math.max(...students.map(s => parseInt(s.id, 10))) : 0;
+                    studentData.id = String(maxId + 1);
+
+                    response = await fetch("http://localhost:3000/data", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(studentData)
+                    });
+                }
+
+                if (response.ok) {
+                    alert(editMode ? "학생 정보가 수정되었습니다." : "학생 정보가 추가되었습니다.");
+                    window.location.reload();
+                } else {
+                    throw new Error(`요청 실패: 상태 코드 ${response.status}`);
+                }
+            } catch (error) {
+                console.error("저장 실패:", error);
+                alert("저장에 실패했습니다.");
+            }
+        }
+
+        async function deleteStudent(id) {
+            if (confirm("정말로 삭제하시겠습니까?")) {
+                try {
+                    const response = await fetch(`http://localhost:3000/data/${id}`, {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" }
+                    });
+                    if (response.ok) {
+                        alert("학생 정보가 삭제되었습니다.");
+                        window.location.reload();
+                    } else {
+                        throw new Error(`삭제 실패: 상태 코드 ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error("삭제 실패:", error);
+                    alert("삭제에 실패했습니다.");
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadStudentList();
+            document.getElementById("addStudentForm").addEventListener("submit", saveStudentData);
+        });
+    </script>
+</body>
+</html>
